@@ -1,5 +1,5 @@
 # limite/tela_principal_psg.py
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 
 
 class TelaPrincipal:

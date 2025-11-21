@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 from controle.controlador_organizador import ControladorOrganizador
 from entidade.atleta import Atleta
 from entidade.organizador import Organizador
@@ -12,6 +12,9 @@ from persistencia.usuario_dao import UsuarioDAO
 from controle.controlador_evento import ControladorEvento
 from persistencia.evento_dao import EventoDAO
 from controle.controlador_inscricao import ControladorInscricao
+from controle.controlador_importacao import ControladorImportacao
+from persistencia.resultado_dao import ResultadoDAO
+from limite.tela_importar_resultados import executar_janela_importacao
 
 
 class ControladorSistema:
@@ -25,6 +28,13 @@ class ControladorSistema:
         self.__controlador_organizador = ControladorOrganizador(self, self.__usuario_dao)
         self.__controlador_evento = ControladorEvento(self, self.__evento_dao, self.__usuario_dao)
         self.__controlador_inscricao = ControladorInscricao(self,self.__inscricao_dao, self.__usuario_dao)
+        self.__resultado_dao = ResultadoDAO()
+        self.__controlador_importacao = ControladorImportacao(
+            self.__resultado_dao,
+            self.__inscricao_dao,
+            self.__usuario_dao,
+            self.__evento_dao
+        )
 
     def iniciar(self):
         while True:
@@ -88,7 +98,7 @@ class ControladorSistema:
                 if not indices_selecionados:
                     self.exibir_popup_erro("Por favor, selecione um evento na tabela primeiro.")
                     continue
-
+            
                 indice_selecionado = indices_selecionados[0]
 
                 evento_selecionado = eventos_do_organizador[indice_selecionado]
@@ -97,6 +107,54 @@ class ControladorSistema:
                     evento_selecionado.id,
                     evento_selecionado.nome
                 )
+            if evento == '-EDITAR_EVENTO-':
+                indices_selecionados = valores['-TABELA_EVENTOS-']
+                if not indices_selecionados:
+                    self.exibir_popup_erro("Por favor, selecione um evento na tabela primeiro.")
+                    continue
+
+                indice_selecionado = indices_selecionados[0]
+                evento_selecionado = eventos_do_organizador[indice_selecionado]
+                
+                self.__controlador_evento.abre_tela_editar_evento(
+                    evento_selecionado,
+                    organizador
+                )
+                
+                eventos_do_organizador = self.__evento_dao.get_all_by_organizador(organizador.cpf)
+                dados_tabela_novos = self.preparar_dados_tabela_eventos(eventos_do_organizador)
+                janela_painel['-TABELA_EVENTOS-'].update(values=dados_tabela_novos)
+            if evento == '-IMPORTAR_TEMPOS-':
+                indices_selecionados = valores['-TABELA_EVENTOS-']
+                if not indices_selecionados:
+                    self.exibir_popup_erro("Por favor, selecione um evento na tabela primeiro.")
+                    continue
+                
+                indice_selecionado = indices_selecionados[0]
+                evento_selecionado = eventos_do_organizador[indice_selecionado]
+                
+                # Verificar se evento está concluído
+                try:
+                    data_evento_obj = datetime.strptime(evento_selecionado.data, '%d/%m/%Y')
+                    if data_evento_obj >= datetime.now():
+                        self.exibir_popup_erro("Apenas eventos concluídos podem ter resultados importados.")
+                        continue
+                except ValueError:
+                    self.exibir_popup_erro("Data do evento inválida.")
+                    continue
+                
+                # Abrir tela de importação
+                sucesso = executar_janela_importacao(
+                    self.__controlador_importacao,
+                    evento_selecionado.id,
+                    evento_selecionado.nome
+                )
+                
+                if sucesso:
+                    # Atualizar tabela de eventos se necessário
+                    eventos_do_organizador = self.__evento_dao.get_all_by_organizador(organizador.cpf)
+                    dados_tabela_novos = self.preparar_dados_tabela_eventos(eventos_do_organizador)
+                    janela_painel['-TABELA_EVENTOS-'].update(values=dados_tabela_novos)
         janela_painel.close()
 
     def preparar_dados_tabela_eventos(self, eventos_do_organizador) -> list:

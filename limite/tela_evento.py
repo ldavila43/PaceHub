@@ -1,5 +1,5 @@
 # limite/tela_evento.py
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 
 
 class TelaEvento:
@@ -39,13 +39,20 @@ class TelaEvento:
             [sg.Text('Nome do Kit*', size=(12, 1)), sg.Input(key='-NOME_KIT-')],
             [sg.Text('Descrição*', size=(12, 1)), sg.Multiline(key='-DESCRICAO-', size=(35, 4))],
             [sg.Text('Valor (R$)*', size=(12, 1)), sg.Input(key='-VALOR-', size=(15, 1))],
-            [sg.Button('Adicionar Kit', key='-ADICIONAR_KIT-')]
+            [
+                sg.Button('Adicionar Kit', key='-ADICIONAR_KIT-', visible=True),
+                sg.Button('Salvar Edição', key='-SALVAR_EDICAO-', visible=False),
+                sg.Button('Cancelar Edição', key='-CANCELAR_EDICAO-', visible=False)
+            ]
         ]
 
         layout_coluna_direita = [
             [sg.Text('Kits do Evento', font=('Helvetica', 16))],
             [sg.Listbox(values=kits_atuais, key='-LISTA_KITS-', size=(40, 8), enable_events=True)],
-            [sg.Button('Remover Selecionado', key='-REMOVER_KIT-')]
+            [
+                sg.Button('Editar Selecionado', key='-EDITAR_KIT-'),
+                sg.Button('Remover Selecionado', key='-REMOVER_KIT-')
+            ]
         ]
 
         layout = [

@@ -1,5 +1,5 @@
 import bcrypt
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 import re
 from entidade.organizador import Organizador
 from limite.tela_cadastro import TelaCadastro

@@ -1,4 +1,4 @@
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 import re
 from entidade.kit_de_corrida import KitDeCorrida
 from limite.tela_inscricao import TelaInscricao

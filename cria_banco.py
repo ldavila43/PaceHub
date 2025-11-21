@@ -56,6 +56,22 @@ sql_inscricao = """
             );
             """
 
+sql_resultados = """
+            CREATE TABLE IF NOT EXISTS Resultados (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                evento_id INTEGER NOT NULL,
+                cpf_atleta TEXT NOT NULL,
+                nome_atleta TEXT NOT NULL,
+                genero_atleta TEXT NOT NULL,
+                tempo_final TEXT NOT NULL,
+                categoria TEXT NOT NULL,
+                classificacao_geral INTEGER,
+                classificacao_categoria INTEGER,
+                pcd INTEGER DEFAULT 0,
+                FOREIGN KEY (evento_id) REFERENCES Eventos(id) ON DELETE CASCADE
+            );
+            """
+
 try:
     cursor.execute(sql_usuarios)
     print('Tabela "usuarios" criada com sucesso (ou já existia)!')
@@ -79,5 +95,16 @@ try:
     print('Tabela "Inscirções" criada com sucesso (ou já existia)!')
 except Exception as e:
     print(f"Erro ao criar tabela Inscrições: {e}")
+
+try:
+    cursor.execute(sql_resultados)
+    print('Tabela "Resultados" criada com sucesso (ou já existia)!')
+    
+    # Criar índices para performance
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_resultados_evento ON Resultados(evento_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_resultados_cpf ON Resultados(cpf_atleta);")
+    print('Índices da tabela "Resultados" criados com sucesso!')
+except Exception as e:
+    print(f"Erro ao criar tabela Resultados: {e}")
 
 conexao.close()

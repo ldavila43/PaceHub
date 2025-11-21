@@ -44,3 +44,40 @@ class Atleta(Usuario):
     def calcula_idade(self, ano_evento):
         idade = ano_evento - self.__data_nascimento.year
         return idade
+
+    def calcular_categoria(self, data_evento: str) -> str:
+        """
+        Calcula a categoria do atleta baseada na RN04.
+        RN04: A categoria do atleta é definida pela idade que ele terá 
+        em 31 de dezembro do ano do evento.
+        
+        Args:
+            data_evento: Data do evento no formato DD/MM/YYYY
+            
+        Returns:
+            Categoria: 'PCD', 'Júnior', 'Adulto' ou 'Master'
+        """
+        # Se é PCD, sempre compete na categoria PCD
+        if self.pcd:
+            return 'PCD'
+        
+        # Calcular idade em 31/12 do ano do evento
+        try:
+            ano_evento = datetime.strptime(data_evento, '%d/%m/%Y').year
+            idade = ano_evento - self.__data_nascimento.year
+            
+            # Ajustar para idade em 31/12
+            data_31_dezembro = datetime(ano_evento, 12, 31)
+            if (data_31_dezembro.month, data_31_dezembro.day) < (self.__data_nascimento.month, self.__data_nascimento.day):
+                idade -= 1
+            
+            # RN07: Classificação por faixas etárias
+            if idade <= 17:
+                return 'Júnior'
+            elif idade <= 49:
+                return 'Adulto'
+            else:  # 50+ anos
+                return 'Master'
+                
+        except ValueError:
+            raise ValueError(f"Formato de data inválido: {data_evento}")
