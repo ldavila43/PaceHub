@@ -238,3 +238,52 @@ class TelaResultados:
                 break
         
         janela.close()
+
+    def exibir_resultado_individual(self, nome_evento: str, resultado: dict):
+        """
+        Exibe uma janela com o resultado individual de um atleta.
+        
+        Args:
+            nome_evento: Nome do evento
+            resultado: Dicionário com dados do resultado
+        """
+        sg.theme('DarkBlue14')
+        
+        # Preparar informações para exibição
+        classificacao_geral = resultado.get('classificacao_geral', '')
+        classificacao_categoria = resultado.get('classificacao_categoria', '')
+        
+        classif_geral_str = f"{classificacao_geral}º lugar" if classificacao_geral else "Não classificado"
+        classif_cat_str = f"{classificacao_categoria}º lugar na categoria {resultado.get('categoria', '')}" if classificacao_categoria else "Não classificado"
+        
+        layout = [
+            [sg.Text(f'Resultado Individual - {nome_evento}', font=('Helvetica', 20, 'bold'))],
+            [sg.HSeparator()],
+            [sg.Text('Atleta:', font=('Helvetica', 12, 'bold')), 
+             sg.Text(resultado.get('nome_atleta', ''), font=('Helvetica', 12))],
+            [sg.Text('Tempo Final:', font=('Helvetica', 12, 'bold')), 
+             sg.Text(resultado.get('tempo_final', ''), font=('Helvetica', 12))],
+            [sg.Text('Categoria:', font=('Helvetica', 12, 'bold')), 
+             sg.Text(resultado.get('categoria', ''), font=('Helvetica', 12))],
+            [sg.Text('Classificação Geral:', font=('Helvetica', 12, 'bold')), 
+             sg.Text(classif_geral_str, font=('Helvetica', 12))],
+            [sg.Text('Classificação por Categoria:', font=('Helvetica', 12, 'bold')), 
+             sg.Text(classif_cat_str, font=('Helvetica', 12))],
+            [sg.HSeparator()],
+            [sg.Button('Fechar', key='-FECHAR-')]
+        ]
+        
+        janela = sg.Window(
+            f'PaceHub - Resultado Individual - {nome_evento}',
+            layout,
+            finalize=True,
+            size=(600, 300),
+            resizable=False
+        )
+        
+        while True:
+            evento, valores = janela.read()
+            if evento in (sg.WIN_CLOSED, '-FECHAR-'):
+                break
+        
+        janela.close()

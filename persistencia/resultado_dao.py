@@ -337,3 +337,54 @@ class ResultadoDAO:
             if conexao:
                 conexao.close()
 
+    def buscar_resultados_por_cpf_em_eventos_publicados(self, cpf: str) -> List[dict]:
+        """
+        Busca todos os resultados de um atleta em eventos com resultados publicados.
+        
+        Args:
+            cpf: CPF do atleta
+            
+        Returns:
+            Lista de dicionários com dados do resultado e nome do evento
+        """
+        conexao = None
+        try:
+            conexao = self.__conectar()
+            cursor = conexao.cursor()
+            
+            cursor.execute("""
+                SELECT r.*, e.nome as evento_nome
+                FROM Resultados r
+                JOIN Eventos e ON r.evento_id = e.id
+                WHERE r.cpf_atleta = ? AND e.resultados_publicados = 1
+                ORDER BY e.data DESC
+            """, (cpf,))
+            
+            rows = cursor.fetchall()
+            resultados = []
+            
+            for row in rows:
+                resultado_dict = {
+                    'id': row['id'],
+                    'evento_id': row['evento_id'],
+                    'evento_nome': row['evento_nome'],
+                    'cpf_atleta': row['cpf_atleta'],
+                    'nome_atleta': row['nome_atleta'],
+                    'genero_atleta': row['genero_atleta'],
+                    'tempo_final': row['tempo_final'],
+                    'categoria': row['categoria'],
+                    'classificacao_geral': row['classificacao_geral'],
+                    'classificacao_categoria': row['classificacao_categoria'],
+                    'pcd': bool(row['pcd'])
+                }
+                resultados.append(resultado_dict)
+            
+            return resultados
+            
+        except sqlite3.Error as e:
+            print(f"Erro ao buscar resultados por CPF em eventos publicados: {e}")
+            return []
+        finally:
+            if conexao:
+                conexao.close()
+

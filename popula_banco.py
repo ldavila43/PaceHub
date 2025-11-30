@@ -2,6 +2,9 @@ import sqlite3
 import bcrypt
 from datetime import datetime
 
+# Script gerador de evento, inscrições e CSV de resultados válidos
+import gerar_evento_teste
+
 
 STATUS_PENDENTE = 1
 STATUS_PAGA = 3
@@ -15,6 +18,7 @@ def limpar_tabelas(cursor):
     print("Limpando tabelas existentes...")
     try:
         cursor.execute("DELETE FROM Resultados;")
+        cursor.execute("DELETE FROM FichasMedicas;")
         cursor.execute("DELETE FROM inscricoes;")
         cursor.execute("DELETE FROM KitsDeCorrida;")
         cursor.execute("DELETE FROM Eventos;")
@@ -36,8 +40,7 @@ def popular_usuarios(cursor):
          '1990-06-21', 'Masculino', 0),
         ('93061326030', 'Ruan', 'ruan@gmail.com', '$2b$12$8HzUdli/sypVopzMXe7Qjupq81iXJyzebn3eRAtksNslKfzE0DBOO', '1',
          '1980-08-05', 'Masculino', 0),
-        ('64590032031', 'Gustavo', 'gustavo@gmail.com', '$2b$12$YiZcTjzXzQfLOa/DUCxk0uZGhSV8RJwrxmO4lQwM.0OJRtgY68UvK',
-         '1', '2010-12-30', 'Masculino', 0),
+        ('07998448962', 'Gustavo', 'gustavo@gmail.com', SENHA_HASH_PADRAO, '0', None, None, None),
         
         # Júnior Masculino (15 atletas) - nascidos entre 2006-2008
         ('79913284147', 'Lucas Ferraz', 'lucas.ferraz@email.com', SENHA_HASH_PADRAO, '1', '2008-03-15', 'Masculino', 0),
@@ -222,7 +225,13 @@ def popular_banco():
         popular_kits(cursor)
         popular_inscricoes(cursor)
 
+        # Persistir dados básicos antes de gerar evento/CSV de teste
         conexao.commit()
+
+        # Gerar evento de teste, inscrições e CSV de resultados válidos
+        print("\n--- GERANDO EVENTO DE TESTE E CSV DE RESULTADOS ---")
+        gerar_evento_teste.main()
+
         print("\n--- BANCO POPULADO COM SUCESSO! ---")
 
     except sqlite3.Error as e:

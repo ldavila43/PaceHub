@@ -8,6 +8,7 @@ Cria:
 import sqlite3
 import csv
 import random
+import os
 from datetime import datetime
 from entidade.atleta import Atleta
 
@@ -388,6 +389,17 @@ def criar_inscricoes(cursor, evento_id: int, kit_id: int, atletas: list):
     return inscricoes_criadas
 
 
+def _caminho_csv(nome_arquivo: str) -> str:
+    """
+    Gera o caminho absoluto para salvar o CSV dentro da pasta 'csv'.
+    Sobrescreve arquivos existentes.
+    """
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    pasta_csv = os.path.join(base_dir, 'csv')
+    os.makedirs(pasta_csv, exist_ok=True)
+    return os.path.join(pasta_csv, nome_arquivo)
+
+
 def gerar_csv_resultados(atletas: list, nome_arquivo: str = 'resultados_teste.csv'):
     """Gera arquivo CSV com CPF e tempos dos atletas."""
     dados_csv = []
@@ -401,13 +413,14 @@ def gerar_csv_resultados(atletas: list, nome_arquivo: str = 'resultados_teste.cs
     dados_csv.sort(key=lambda x: sum(int(t) * (60 ** (2 - i)) for i, t in enumerate(x[1].split(':'))))
     
     # Escrever CSV
-    with open(nome_arquivo, 'w', newline='', encoding='utf-8') as arquivo:
+    caminho = _caminho_csv(nome_arquivo)
+    with open(caminho, 'w', newline='', encoding='utf-8') as arquivo:
         writer = csv.writer(arquivo)
         # Sem cabeçalho conforme especificado
         writer.writerows(dados_csv)
     
-    print(f"Arquivo CSV '{nome_arquivo}' gerado com {len(dados_csv)} resultados.")
-    return nome_arquivo
+    print(f"Arquivo CSV '{caminho}' gerado com {len(dados_csv)} resultados.")
+    return caminho
 
 
 def gerar_csv_erro_cpf_invalido(atletas: list):
@@ -431,12 +444,13 @@ def gerar_csv_erro_cpf_invalido(atletas: list):
             dados_csv.append([atleta.cpf, gerar_tempo_realista_10km(atleta.genero, atleta.calcular_categoria("11/11/2025"))])
     
     nome_arquivo = 'resultados_erro_cpf_invalido.csv'
-    with open(nome_arquivo, 'w', newline='', encoding='utf-8') as arquivo:
+    caminho = _caminho_csv(nome_arquivo)
+    with open(caminho, 'w', newline='', encoding='utf-8') as arquivo:
         writer = csv.writer(arquivo)
         writer.writerows(dados_csv)
     
-    print(f"Arquivo CSV '{nome_arquivo}' gerado com {len(dados_csv)} linhas (5 com CPF inválido).")
-    return nome_arquivo
+    print(f"Arquivo CSV '{caminho}' gerado com {len(dados_csv)} linhas (5 com CPF inválido).")
+    return caminho
 
 
 def gerar_csv_erro_atleta_nao_cadastrado():
@@ -455,12 +469,13 @@ def gerar_csv_erro_atleta_nao_cadastrado():
         dados_csv.append([cpf_inexistente, tempo])
     
     nome_arquivo = 'resultados_erro_atleta_nao_cadastrado.csv'
-    with open(nome_arquivo, 'w', newline='', encoding='utf-8') as arquivo:
+    caminho = _caminho_csv(nome_arquivo)
+    with open(caminho, 'w', newline='', encoding='utf-8') as arquivo:
         writer = csv.writer(arquivo)
         writer.writerows(dados_csv)
     
-    print(f"Arquivo CSV '{nome_arquivo}' gerado com {len(dados_csv)} linhas (atletas não cadastrados).")
-    return nome_arquivo
+    print(f"Arquivo CSV '{caminho}' gerado com {len(dados_csv)} linhas (atletas não cadastrados).")
+    return caminho
 
 
 def gerar_csv_erro_tempo_nao_informado(atletas: list):
@@ -478,12 +493,13 @@ def gerar_csv_erro_tempo_nao_informado(atletas: list):
             dados_csv.append([atleta.cpf, tempo])
     
     nome_arquivo = 'resultados_erro_tempo_nao_informado.csv'
-    with open(nome_arquivo, 'w', newline='', encoding='utf-8') as arquivo:
+    caminho = _caminho_csv(nome_arquivo)
+    with open(caminho, 'w', newline='', encoding='utf-8') as arquivo:
         writer = csv.writer(arquivo)
         writer.writerows(dados_csv)
     
-    print(f"Arquivo CSV '{nome_arquivo}' gerado com {len(dados_csv)} linhas (5 com tempo não informado).")
-    return nome_arquivo
+    print(f"Arquivo CSV '{caminho}' gerado com {len(dados_csv)} linhas (5 com tempo não informado).")
+    return caminho
 
 
 def gerar_csv_erro_tempo_invalido(atletas: list):
@@ -512,12 +528,13 @@ def gerar_csv_erro_tempo_invalido(atletas: list):
             dados_csv.append([atleta.cpf, tempo])
     
     nome_arquivo = 'resultados_erro_tempo_invalido.csv'
-    with open(nome_arquivo, 'w', newline='', encoding='utf-8') as arquivo:
+    caminho = _caminho_csv(nome_arquivo)
+    with open(caminho, 'w', newline='', encoding='utf-8') as arquivo:
         writer = csv.writer(arquivo)
         writer.writerows(dados_csv)
     
-    print(f"Arquivo CSV '{nome_arquivo}' gerado com {len(dados_csv)} linhas (9 com tempo inválido).")
-    return nome_arquivo
+    print(f"Arquivo CSV '{caminho}' gerado com {len(dados_csv)} linhas (9 com tempo inválido).")
+    return caminho
 
 
 def gerar_csv_erro_formato_invalido(atletas: list):
@@ -532,12 +549,13 @@ def gerar_csv_erro_formato_invalido(atletas: list):
     dados_csv.append([atletas[2].cpf, gerar_tempo_realista_10km(atletas[2].genero, atletas[2].calcular_categoria("11/11/2025"))])  # Válido
     
     nome_arquivo = 'resultados_erro_formato_invalido.csv'
-    with open(nome_arquivo, 'w', newline='', encoding='utf-8') as arquivo:
+    caminho = _caminho_csv(nome_arquivo)
+    with open(caminho, 'w', newline='', encoding='utf-8') as arquivo:
         writer = csv.writer(arquivo)
         writer.writerows(dados_csv)
     
-    print(f"Arquivo CSV '{nome_arquivo}' gerado com {len(dados_csv)} linhas (formato inválido).")
-    return nome_arquivo
+    print(f"Arquivo CSV '{caminho}' gerado com {len(dados_csv)} linhas (formato inválido).")
+    return caminho
 
 
 def gerar_csv_erro_atleta_nao_inscrito(cursor, evento_id: int):
@@ -578,12 +596,13 @@ def gerar_csv_erro_atleta_nao_inscrito(cursor, evento_id: int):
             continue
     
     nome_arquivo = 'resultados_erro_atleta_nao_inscrito.csv'
-    with open(nome_arquivo, 'w', newline='', encoding='utf-8') as arquivo:
+    caminho = _caminho_csv(nome_arquivo)
+    with open(caminho, 'w', newline='', encoding='utf-8') as arquivo:
         writer = csv.writer(arquivo)
         writer.writerows(dados_csv)
     
-    print(f"Arquivo CSV '{nome_arquivo}' gerado com {len(dados_csv)} linhas (atletas não inscritos).")
-    return nome_arquivo
+    print(f"Arquivo CSV '{caminho}' gerado com {len(dados_csv)} linhas (atletas não inscritos).")
+    return caminho
 
 
 def gerar_csv_erro_multiplos_erros(atletas: list):
@@ -602,12 +621,13 @@ def gerar_csv_erro_multiplos_erros(atletas: list):
     dados_csv.append([atletas[4].cpf, '00:45:30'])  # Válido para comparação
     
     nome_arquivo = 'resultados_erro_multiplos_erros.csv'
-    with open(nome_arquivo, 'w', newline='', encoding='utf-8') as arquivo:
+    caminho = _caminho_csv(nome_arquivo)
+    with open(caminho, 'w', newline='', encoding='utf-8') as arquivo:
         writer = csv.writer(arquivo)
         writer.writerows(dados_csv)
     
-    print(f"Arquivo CSV '{nome_arquivo}' gerado com {len(dados_csv)} linhas (múltiplos erros).")
-    return nome_arquivo
+    print(f"Arquivo CSV '{caminho}' gerado com {len(dados_csv)} linhas (múltiplos erros).")
+    return caminho
 
 
 def main():

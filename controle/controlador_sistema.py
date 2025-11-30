@@ -17,6 +17,7 @@ from controle.controlador_importacao import ControladorImportacao
 from persistencia.resultado_dao import ResultadoDAO
 from limite.tela_importar_resultados import executar_janela_importacao
 from limite.tela_resultados import TelaResultados
+from limite.tela_inscricao import TelaInscricao
 
 
 class ControladorSistema:
@@ -39,6 +40,7 @@ class ControladorSistema:
             self.__evento_dao
         )
         self.__tela_resultados = TelaResultados()
+        self.__tela_inscricao = TelaInscricao()
 
     def iniciar(self):
         while True:
@@ -194,6 +196,68 @@ class ControladorSistema:
                     evento_selecionado.nome,
                     resultados
                 )
+            if evento == '-VER_INSCRITOS-':
+                indices_selecionados = valores['-TABELA_EVENTOS-']
+                if not indices_selecionados:
+                    self.exibir_popup_erro("Por favor, selecione um evento na tabela primeiro.")
+                    continue
+                
+                indice_selecionado = indices_selecionados[0]
+                evento_selecionado = eventos_do_organizador[indice_selecionado]
+                
+                # Buscar inscrições do evento
+                inscricoes = self.__inscricao_dao.get_all_by_evento(evento_selecionado.id)
+                
+                if not inscricoes:
+                    self.exibir_popup_erro("Este evento ainda não possui inscritos.")
+                    continue
+                
+                # Exibir lista de inscritos
+                self.__tela_inscricao.exibir_lista_inscritos(
+                    evento_selecionado.nome,
+                    inscricoes
+                )
+            if evento == '-PUBLICAR_RESULTADOS-':
+                indices_selecionados = valores['-TABELA_EVENTOS-']
+                if not indices_selecionados:
+                    self.exibir_popup_erro("Por favor, selecione um evento na tabela primeiro.")
+                    continue
+                
+                indice_selecionado = indices_selecionados[0]
+                evento_selecionado = eventos_do_organizador[indice_selecionado]
+                
+                # Validar que o evento está concluído
+                try:
+                    data_evento_obj = datetime.strptime(evento_selecionado.data, '%d/%m/%Y')
+                    if data_evento_obj >= datetime.now():
+                        self.exibir_popup_erro("Apenas eventos concluídos podem ter resultados publicados.")
+                        continue
+                except ValueError:
+                    self.exibir_popup_erro("Data do evento inválida.")
+                    continue
+                
+                # Validar que existem resultados importados
+                resultados = self.__resultado_dao.buscar_resultados_por_evento(evento_selecionado.id)
+                if not resultados:
+                    self.exibir_popup_erro("Este evento ainda não possui resultados importados. Importe os resultados primeiro.")
+                    continue
+                
+                # Validar que os resultados ainda não foram publicados
+                evento_atualizado = self.__evento_dao.get_by_id(evento_selecionado.id)
+                if evento_atualizado and evento_atualizado.resultados_publicados == 1:
+                    self.exibir_popup_erro("Os resultados deste evento já foram publicados.")
+                    continue
+                
+                # Publicar resultados
+                sucesso = self.__evento_dao.marcar_resultados_publicados(evento_selecionado.id)
+                if sucesso:
+                    self.exibir_popup_sucesso("Resultados publicados com sucesso! Os atletas agora podem consultar seus resultados individuais.")
+                    # Atualizar lista de eventos
+                    eventos_do_organizador = self.__evento_dao.get_all_by_organizador(organizador.cpf)
+                    dados_tabela_novos = self.preparar_dados_tabela_eventos(eventos_do_organizador)
+                    janela_painel['-TABELA_EVENTOS-'].update(values=dados_tabela_novos)
+                else:
+                    self.exibir_popup_erro("Erro ao publicar resultados.")
         janela_painel.close()
 
     def preparar_dados_tabela_eventos(self, eventos_do_organizador) -> list:
@@ -217,6 +281,10 @@ class ControladorSistema:
 
         return dados_formatados
 
+
+    def abrir_tela_inscricao_atleta(self, evento_id: int, atleta: Atleta):
+        """Abre a tela de inscrição para o atleta se inscrever em um evento."""
+        self.__controlador_inscricao.abre_tela_inscricao_atleta(evento_id, atleta)
 
     def exibir_popup_erro(self, mensagem: str):
         sg.popup_error(mensagem, title="Erro")

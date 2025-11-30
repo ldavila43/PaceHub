@@ -37,7 +37,7 @@ class InscricaoDAO:
             inscricao.id = cursor.lastrowid
 
             conexao.commit()
-            print(f"Inscrição ID {inscricao.id} salva para o atleta {inscricao.atleta_cpf}")
+            print(f"Inscrição ID {inscricao.id} salva para o atleta {inscricao.atleta_cpf_str}")
             conexao.close()
 
     def get_by_atleta_e_evento(self, atleta_cpf, evento_id):
@@ -137,6 +137,130 @@ class InscricaoDAO:
                 conexao.rollback()
             print(f"Erro ao deletar inscrições: {e}")
             return 0
+        finally:
+            if conexao:
+                conexao.close()
+
+    def get_all_by_evento(self, evento_id: int):
+        """Busca todas as inscrições de um evento com dados do atleta e kit."""
+        conexao = None
+        try:
+            conexao = self.__conectar()
+            conexao.row_factory = sqlite3.Row
+            cursor = conexao.cursor()
+
+            sql = """
+                SELECT inscricoes.*,
+                       usuarios.nome as atleta_nome,
+                       usuarios.cpf as atleta_cpf,
+                       kitsdecorrida.nome as kit_nome,
+                       kitsdecorrida.valor as kit_valor
+                FROM inscricoes
+                JOIN usuarios ON inscricoes.atleta_cpf = usuarios.cpf
+                JOIN kitsdecorrida ON inscricoes.kit_id = kitsdecorrida.id
+                WHERE inscricoes.evento_id = ?
+                ORDER BY inscricoes.data_inscricao;
+            """
+            cursor.execute(sql, (evento_id,))
+
+            lista_dados = cursor.fetchall()
+            inscricoes_com_dados = []
+
+            for dados in lista_dados:
+                inscricao_info = {
+                    'id': dados['id'],
+                    'atleta_nome': dados['atleta_nome'],
+                    'atleta_cpf': dados['atleta_cpf'],
+                    'data_inscricao': dados['data_inscricao'],
+                    'kit_nome': dados['kit_nome'],
+                    'kit_valor': dados['kit_valor'],
+                    'status': dados['status'],
+                    'kit_entregue': dados['kit_entregue']
+                }
+                inscricoes_com_dados.append(inscricao_info)
+
+            return inscricoes_com_dados
+
+        except sqlite3.Error as e:
+            print(f"Erro ao buscar inscrições do evento: {e}")
+            return []
+        finally:
+            if conexao:
+                conexao.close()
+
+    def get_all_by_atleta(self, atleta_cpf: str):
+        """Busca todas as inscrições de um atleta com dados do evento."""
+        conexao = None
+        try:
+            conexao = self.__conectar()
+            conexao.row_factory = sqlite3.Row
+            cursor = conexao.cursor()
+
+            sql = """
+                SELECT inscricoes.*,
+                       eventos.nome as evento_nome,
+                       eventos.data as evento_data,
+                       eventos.data_limite_cred,
+                       kitsdecorrida.nome as kit_nome,
+                       kitsdecorrida.valor as kit_valor
+                FROM inscricoes
+                JOIN eventos ON inscricoes.evento_id = eventos.id
+                JOIN kitsdecorrida ON inscricoes.kit_id = kitsdecorrida.id
+                WHERE inscricoes.atleta_cpf = ?
+                ORDER BY inscricoes.data_inscricao;
+            """
+            cursor.execute(sql, (atleta_cpf,))
+
+            lista_dados = cursor.fetchall()
+            inscricoes_com_dados = []
+
+            for dados in lista_dados:
+                inscricao_info = {
+                    'id': dados['id'],
+                    'evento_id': dados['evento_id'],
+                    'evento_nome': dados['evento_nome'],
+                    'evento_data': dados['evento_data'],
+                    'data_limite_cred': dados['data_limite_cred'],
+                    'data_inscricao': dados['data_inscricao'],
+                    'kit_nome': dados['kit_nome'],
+                    'kit_valor': dados['kit_valor'],
+                    'status': dados['status'],
+                    'kit_entregue': dados['kit_entregue']
+                }
+                inscricoes_com_dados.append(inscricao_info)
+
+            return inscricoes_com_dados
+
+        except sqlite3.Error as e:
+            print(f"Erro ao buscar inscrições do atleta: {e}")
+            return []
+        finally:
+            if conexao:
+                conexao.close()
+
+    def delete_by_atleta_e_evento(self, atleta_cpf: str, evento_id: int) -> bool:
+        """Deleta uma inscrição específica de um atleta em um evento."""
+        conexao = None
+        try:
+            conexao = self.__conectar()
+            cursor = conexao.cursor()
+
+            sql = "DELETE FROM inscricoes WHERE atleta_cpf = ? AND evento_id = ?;"
+            cursor.execute(sql, (atleta_cpf, evento_id))
+
+            removidas = cursor.rowcount
+            conexao.commit()
+            
+            if removidas > 0:
+                print(f"Inscrição do atleta {atleta_cpf} no evento {evento_id} deletada.")
+                return True
+            return False
+
+        except sqlite3.Error as e:
+            if conexao:
+                conexao.rollback()
+            print(f"Erro ao deletar inscrição: {e}")
+            return False
         finally:
             if conexao:
                 conexao.close()

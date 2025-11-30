@@ -27,6 +27,7 @@ sql_eventos = """
                 tempo_corte TEXT,
                 data_limite_cred TEXT,
                 organizador_cpf TEXT NOT NULL,
+                resultados_publicados INTEGER DEFAULT 0,
                 FOREIGN KEY (organizador_cpf) REFERENCES usuarios (cpf)
             );"""
 
@@ -53,6 +54,23 @@ sql_inscricao = """
             FOREIGN KEY (atleta_cpf) REFERENCES usuarios (cpf),
             FOREIGN KEY (evento_id) REFERENCES Eventos (id),
             FOREIGN KEY (kit_id) REFERENCES KitsDeCorrida (id)
+            );
+            """
+
+sql_fichas_medicas = """
+            CREATE TABLE IF NOT EXISTS FichasMedicas (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                inscricao_id INTEGER NOT NULL UNIQUE,
+                preenchida INTEGER NOT NULL DEFAULT 0,
+                pergunta1 INTEGER,
+                pergunta2 INTEGER,
+                pergunta3 INTEGER,
+                pergunta4 INTEGER,
+                pergunta5 INTEGER,
+                pergunta6 INTEGER,
+                pergunta7 INTEGER,
+                declaracao_saude INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY (inscricao_id) REFERENCES Inscricoes(ID) ON DELETE CASCADE
             );
             """
 
@@ -97,6 +115,12 @@ except Exception as e:
     print(f"Erro ao criar tabela Inscrições: {e}")
 
 try:
+    cursor.execute(sql_fichas_medicas)
+    print('Tabela "FichasMedicas" criada com sucesso (ou já existia)!')
+except Exception as e:
+    print(f"Erro ao criar tabela FichasMedicas: {e}")
+
+try:
     cursor.execute(sql_resultados)
     print('Tabela "Resultados" criada com sucesso (ou já existia)!')
     
@@ -107,4 +131,26 @@ try:
 except Exception as e:
     print(f"Erro ao criar tabela Resultados: {e}")
 
+# Migração: Adicionar coluna resultados_publicados se não existir
+try:
+    cursor.execute("PRAGMA table_info(Eventos)")
+    colunas = [row[1] for row in cursor.fetchall()]
+    if 'resultados_publicados' not in colunas:
+        cursor.execute("ALTER TABLE Eventos ADD COLUMN resultados_publicados INTEGER DEFAULT 0;")
+        conexao.commit()
+        print('Coluna "resultados_publicados" adicionada à tabela Eventos!')
+except Exception as e:
+    print(f"Erro ao adicionar coluna resultados_publicados: {e}")
+
+# Migração: Criar tabela FichasMedicas se não existir (para bancos antigos)
+try:
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='FichasMedicas';")
+    if not cursor.fetchone():
+        cursor.execute(sql_fichas_medicas)
+        conexao.commit()
+        print('Tabela "FichasMedicas" criada via migração!')
+except Exception as e:
+    print(f"Erro ao criar tabela FichasMedicas via migração: {e}")
+
+conexao.commit()
 conexao.close()

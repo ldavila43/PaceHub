@@ -11,3 +11,4 @@ class Evento:
         self.data_limite_cred = data_limite_cred
         self.organizador_cpf = organizador_cpf
         self.kits: List[KitDeCorrida] = []
+        self.resultados_publicados: int = 0

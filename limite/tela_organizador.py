@@ -26,7 +26,9 @@ class TelaOrganizador:
             [sg.Button('Gerenciar Entrega de Kits', key='-GERENCIAR_KITS-'),
              sg.Button('Editar Evento Selecionado', key='-EDITAR_EVENTO-'),
              sg.Button('Importar Tempo dos Participantes', key='-IMPORTAR_TEMPOS-')],
-            [sg.Button('Ver Resultados por Categoria', key='-VER_RESULTADOS-')]
+            [sg.Button('Ver Resultados por Categoria', key='-VER_RESULTADOS-'),
+             sg.Button('Visualizar Lista de Inscritos', key='-VER_INSCRITOS-'),
+             sg.Button('Publicar Resultados da Corrida', key='-PUBLICAR_RESULTADOS-')]
         ]
 
         # Coluna com botões à direita (mesmo tamanho)
